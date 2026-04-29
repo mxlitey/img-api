@@ -63,5 +63,14 @@
             <p class="copyright">© 2025 谷雨. 保留所有权利。</p>
         </footer>
     </div>
+
+    <script>
+        document.querySelectorAll('.endpoint').forEach(el => {
+            const path = el.textContent;
+            if (path.startsWith('/')) {
+                el.textContent = location.origin + path;
+            }
+        });
+    </script>
 </body>
 </html>
