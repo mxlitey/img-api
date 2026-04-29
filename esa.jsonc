@@ -2,5 +2,5 @@
   "assets": {
     "directory": "./public"  // 静态资源（index.html、style.css等）在根目录
   },
-  "entry": "./ESA/bing/index.js"
+  "entry": "./ESA/bing/index.ts"
 }
