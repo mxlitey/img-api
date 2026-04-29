@@ -1,4 +1,8 @@
 {
-  "assets": "",
-  "functionFilePath": "index.js"
+  "assets": {
+    "directory": "."  // 静态资源（index.html、style.css等）在根目录
+  },
+  "functions": {
+    "path": "functions/bing/index.js"  // 函数文件路径
+  }
 }
