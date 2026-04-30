@@ -1,0 +1,17 @@
+name = "img-api"
+main = "functions/bing/index.js"
+compatibility_date = "2024-01-01"
+
+[build]
+command = ""
+
+[vars]
+BING_API_URL = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN"
+BING_BASE_URL = "https://cn.bing.com"
+
+[[routes]]
+pattern = "/bing"
+zone_name = "your-zone-name.com"
+
+[site]
+bucket = "./public"
