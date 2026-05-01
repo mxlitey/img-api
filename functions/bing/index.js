@@ -19,6 +19,15 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+function getCache() {
+  try {
+    if (typeof caches !== 'undefined' && caches.default) {
+      return caches.default;
+    }
+  } catch (e) {}
+  return null;
+}
+
 async function handleRequest(request) {
   const method = request.method.toUpperCase();
 
@@ -37,23 +46,28 @@ async function handleRequest(request) {
   }
 
   const cacheKey = new Request(request.url, { method: 'GET' });
-  const cache = caches?.default;
+  const cache = getCache();
   
   if (cache) {
-    const cached = await cache.match(cacheKey);
-    if (cached) {
-      const headers = new Headers(cached.headers);
-      headers.set('X-Cache-Status', 'HIT');
-      return new Response(cached.body, { status: cached.status, headers: { ...Object.fromEntries(headers), ...corsHeaders } });
-    }
+    try {
+      const cached = await cache.match(cacheKey);
+      if (cached) {
+        const headers = new Headers(cached.headers);
+        headers.set('X-Cache-Status', 'HIT');
+        return new Response(cached.body, { status: cached.status, headers: { ...Object.fromEntries(headers), ...corsHeaders } });
+      }
+    } catch (e) {}
   }
 
   try {
     const apiRes = await fetchWithTimeout(BING_API);
     if (!apiRes.ok) return jsonResponse({ error: '无法获取 Bing 图片信息' }, 502);
     
-    const { images } = await apiRes.json();
-    if (!images?.[0]?.url) return jsonResponse({ error: '未找到图片信息' }, 404);
+    const data = await apiRes.json();
+    const images = data.images;
+    if (!images || !images[0] || !images[0].url) {
+      return jsonResponse({ error: '未找到图片信息' }, 404);
+    }
 
     const imgRes = await fetchWithTimeout(BING_BASE + images[0].url);
     if (!imgRes.ok) return jsonResponse({ error: '无法获取图片资源' }, 502);
@@ -69,7 +83,11 @@ async function handleRequest(request) {
 
     const response = new Response(method === 'HEAD' ? null : imgRes.body, { status: 200, headers });
     
-    if (cache) await cache.put(cacheKey, response.clone());
+    if (cache) {
+      try {
+        await cache.put(cacheKey, response.clone());
+      } catch (e) {}
+    }
     
     return response;
   } catch (e) {
@@ -79,8 +97,8 @@ async function handleRequest(request) {
 
 function adapt(arg0, arg1, arg2) {
   if (arg0 instanceof Request) return arg0;
-  if (arg0?.request instanceof Request) return arg0.request;
-  return arg0?.request;
+  if (arg0 && arg0.request instanceof Request) return arg0.request;
+  return arg0 && arg0.request;
 }
 
 export default {
